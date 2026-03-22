@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para Anahí 🌻</title>
+    <style>
+        /* Estilos Base */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #fffde7, #ffee58);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; /* Evita scrolls raros en móvil */
+            position: relative;
+        }
+
+        /* --- Girasoles de fondo (Lluvia constante) --- */
+        .bg-flower {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 1;
+            animation: rain linear infinite;
+        }
+        @keyframes rain {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* --- Contenedor del Ramo Animado --- */
+        #bouquet-container {
+            position: relative;
+            width: 200px;
+            height: 250px;
+            margin-bottom: 20px;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Tallo y lazo (aparecen al final) */
+        .stem {
+            position: absolute;
+            bottom: 0;
+            width: 8px;
+            height: 150px;
+            background-color: #4caf50;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+        .bow {
+            position: absolute;
+            bottom: 40px;
+            font-size: 2rem;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            z-index: 11;
+        }
+
+        /* Girasoles individuales del ramo */
+        .bouquet-flower {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 1s ease-out; /* Animación suave de llegada */
+            z-index: 12;
+        }
+        /* Clase que activa la animación al llegar a su posición */
+        .flower-arrived {
+            opacity: 1 !important;
+            transform: scale(1) rotate(0deg) !important;
+        }
+
+        /* --- Tarjeta de Mensaje (Aparece al final) --- */
+        #message-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(245, 127, 23, 0.2);
+            text-align: center;
+            max-width: 85%;
+            width: 320px;
+            border: 2px solid #fdd835;
+            opacity: 0; /* Oculta inicialmente */
+            transform: translateY(20px);
+            transition: all 1.5s ease-out; /* Animación de aparición */
+            z-index: 20;
+        }
+        #message-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1 { color: #f57f17; font-size: 1.8rem; margin-bottom: 0.5rem; }
+        p { color: #5d4037; font-size: 1.1rem; line-height: 1.5; margin: 8px 0; font-weight: 500; }
+
+    </style>
+</head>
+<body>
+
+    <div id="bg-flowers-container"></div>
+
+    <div id="bouquet-container">
+        <div class="stem" id="stem"></div>
+        <div class="bow" id="bow">💝</div>
+        </div>
+
+    <div id="message-card">
+        <h1>Para Anahí</h1>
+        <p>Gracias por tu amistad.</p>
+        <p>Eres única, nunca cambies.</p>
+        <p>Te quiero mucho.</p>
+    </div>
+
+    <script>
+        // --- 1. Generar Lluvia de Girasoles de Fondo ---
+        const bgContainer = document.getElementById('bg-flowers-container');
+        for (let i = 0; i < 15; i++) {
+            const flower = document.createElement('div');
+            flower.innerHTML = '🌻';
+            flower.className = 'bg-flower';
+            flower.style.left = Math.random() * 100 + 'vw';
+            flower.style.animationDelay = (Math.random() * 5) + 's';
+            flower.style.animationDuration = (Math.random() * 3 + 4) + 's'; // Velocidad variable
+            bgContainer.appendChild(flower);
+        }
+
+        // --- 2. Configuración y Animación del Ramo ---
+        const bouquetContainer = document.getElementById('bouquet-container');
+        const stem = document.getElementById('stem');
+        const bow = document.getElementById('bow');
+        const messageCard = document.getElementById('message-card');
+
+        // Coordenadas (x, y) relativas al centro del contenedor para cada girasol
+        const flowerPositions = [
+            { x: 0, y: -60 },   // Centro arriba
+            { x: -40, y: -40 }, // Izquierda arriba
+            { x: 40, y: -40 },  // Derecha arriba
+            { x: -60, y: 0 },   // Izquierda centro
+            { x: 60, y: 0 },    // Derecha centro
+            { x: -30, y: 30 },  // Izquierda abajo
+            { x: 30, y: 30 },   // Derecha abajo
+            { x: 0, y: 0 }      // Centro total
+        ];
+
+        let flowerCount = 0;
+
+        function addFlowerToBouquet() {
+            if (flowerCount < flowerPositions.length) {
+                const pos = flowerPositions[flowerCount];
+                const flower = document.createElement('div');
+                flower.innerHTML = '🌻';
+                flower.className = 'bouquet-flower';
+
+                // Posición de inicio aleatoria (fuera de la pantalla)
+                const startFromTop = Math.random() > 0.5;
+                flower.style.top = startFromTop ? '-100px' : '100vh';
+                flower.style.left = (Math.random() * 100) + 'vw';
+                flower.style.transform = `scale(0) rotate(${Math.random() * 360}deg)`;
+
+                bouquetContainer.appendChild(flower);
+
+                // Pequeño delay para que el navegador registre la posición inicial
+                setTimeout(() => {
+                    // Posición final (en el ramo)
+                    flower.style.top = `calc(50% + ${pos.y}px)`;
+                    flower.style.left = `calc(50% + ${pos.x}px)`;
+                    flower.classList.add('flower-arrived');
+                }, 50);
+
+                flowerCount++;
+                // Llamar a la siguiente flor después de un retraso (crea el efecto "poco a poco")
+                setTimeout(addFlowerToBouquet, 800); // 0.8 segundos entre flores
+            } else {
+                // Todas las flores han llegado, mostrar tallo, lazo y mensaje
+                stem.style.opacity = 1;
+                bow.style.opacity = 1;
+                setTimeout(() => {
+                    messageCard.classList.add('show');
+                }, 1000); // Esperar un segundo tras el ramo
+            }
+        }
+
+        // Iniciar la animación del ramo poco después de cargar la página
+        window.onload = () => {
+            setTimeout(addFlowerToBouquet, 1000);
+        };
+
+    </script>
+</body>
+</html>
